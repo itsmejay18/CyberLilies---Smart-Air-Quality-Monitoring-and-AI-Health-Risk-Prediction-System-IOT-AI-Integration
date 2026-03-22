@@ -68,62 +68,39 @@ class DashboardScreen extends ConsumerWidget {
                 RuntimeStatusBanner(status: runtimeStatus),
               ],
               const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Active zones',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            Text(
-                              '${items.length}',
-                              style: Theme.of(context).textTheme.displaySmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Unread alerts',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            Text(
-                              '$unreadCount',
-                              style: Theme.of(context).textTheme.displaySmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'IoT nodes online',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            Text(
-                              '${iotDevices.where((device) => device.connectionState == IoTConnectionState.online).length}',
-                              style: Theme.of(context).textTheme.displaySmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatisticCard(
+                      label: 'Active zones',
+                      value: '${items.length}',
+                      icon: Icons.grid_view_rounded,
+                      accent: const Color(0xFF2F7D32),
+                      subtitle: 'Zones',
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _StatisticCard(
+                      label: 'Unread alerts',
+                      value: '$unreadCount',
+                      icon: Icons.notifications_active_outlined,
+                      accent: const Color(0xFFD97706),
+                      subtitle: 'Alerts',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _StatisticCard(
+                      label: 'IoT nodes online',
+                      value:
+                          '${iotDevices.where((device) => device.connectionState == IoTConnectionState.online).length}',
+                      icon: Icons.router_outlined,
+                      accent: const Color(0xFF1565C0),
+                      subtitle: 'Online',
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               if (iotDevices.isNotEmpty) ...[
@@ -176,6 +153,82 @@ class DashboardScreen extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _StatisticCard extends StatelessWidget {
+  const _StatisticCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accent,
+    required this.subtitle,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color accent;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: accent, size: 18),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF1D251C),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.black54),
+          ),
+        ],
+      ),
     );
   }
 }
