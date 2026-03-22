@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/app_runtime_status.dart';
-import '../../../data/models/iot_device.dart';
 import '../../../core/utils/app_config.dart';
 import '../../../data/models/zone.dart';
 import '../../../data/repositories/farm_repository.dart';
@@ -22,11 +21,6 @@ final farmRepositoryProvider = Provider<FarmRepository>((ref) {
 final zonesProvider = StreamProvider<List<Zone>>((ref) {
   final repository = ref.watch(farmRepositoryProvider);
   return repository.watchZones();
-});
-
-final iotDevicesProvider = StreamProvider<List<IoTDevice>>((ref) {
-  final repository = ref.watch(farmRepositoryProvider);
-  return repository.watchIoTDevices();
 });
 
 final appRuntimeStatusProvider = FutureProvider<AppRuntimeStatus>((ref) async {

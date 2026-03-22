@@ -8,4 +8,5 @@ class AppConstants {
   static const String mockSessionEmail = 'farmer@demo.com';
   static const String settingsPrefsKey = 'smart_farm_settings';
   static const String mockSessionPrefsKey = 'smart_farm_mock_session';
+  static const String localDevicesPrefsKey = 'smart_farm_local_devices';
 }
