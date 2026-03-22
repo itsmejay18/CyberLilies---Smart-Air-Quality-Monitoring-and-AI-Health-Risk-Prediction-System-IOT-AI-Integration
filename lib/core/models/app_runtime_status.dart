@@ -10,4 +10,12 @@ class AppRuntimeStatus {
   final bool aiServerAvailable;
 
   bool get isDemoMode => !liveDataAvailable;
+
+  bool get needsSetup => !supabaseConfigured;
+
+  String get label {
+    if (needsSetup) return 'SETUP';
+    if (liveDataAvailable) return 'LIVE';
+    return 'NO DATA';
+  }
 }

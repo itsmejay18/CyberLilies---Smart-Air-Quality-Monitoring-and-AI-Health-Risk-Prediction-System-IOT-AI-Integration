@@ -14,7 +14,7 @@ final zoneDetailsProvider = FutureProvider.family<ZoneDetails, String>((
   return repository.fetchZoneDetails(zoneId);
 });
 
-final zonePredictionProvider = FutureProvider.family<Prediction, String>((
+final zonePredictionProvider = FutureProvider.family<Prediction?, String>((
   ref,
   zoneId,
 ) async {

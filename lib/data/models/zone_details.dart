@@ -14,8 +14,8 @@ class ZoneDetails extends Equatable {
   });
 
   final Zone zone;
-  final SensorDataPoint latestSensorData;
-  final Prediction prediction;
+  final SensorDataPoint? latestSensorData;
+  final Prediction? prediction;
   final FarmAction? lastAction;
 
   @override

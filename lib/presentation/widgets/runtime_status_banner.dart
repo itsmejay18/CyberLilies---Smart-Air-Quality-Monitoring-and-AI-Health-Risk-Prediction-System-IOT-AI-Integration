@@ -9,9 +9,18 @@ class RuntimeStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDemo = status.isDemoMode;
-    final tone = isDemo ? Colors.amber.shade100 : Colors.green.shade100;
-    final accent = isDemo ? Colors.amber.shade900 : Colors.green.shade900;
+    final isSetup = status.needsSetup;
+    final noData = !status.liveDataAvailable && !isSetup;
+    final tone = isSetup
+        ? Colors.blueGrey.shade100
+        : noData
+        ? Colors.orange.shade100
+        : Colors.green.shade100;
+    final accent = isSetup
+        ? Colors.blueGrey.shade900
+        : noData
+        ? Colors.orange.shade900
+        : Colors.green.shade900;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -23,7 +32,11 @@ class RuntimeStatusBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            isDemo ? Icons.science_outlined : Icons.cloud_done_outlined,
+            isSetup
+                ? Icons.settings_ethernet_outlined
+                : noData
+                ? Icons.cloud_off_outlined
+                : Icons.cloud_done_outlined,
             color: accent,
           ),
           const SizedBox(width: 12),
@@ -32,13 +45,19 @@ class RuntimeStatusBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isDemo ? 'Demo data mode' : 'Live data mode',
+                  isSetup
+                      ? 'Backend setup required'
+                      : noData
+                      ? 'Waiting for live telemetry'
+                      : 'Live data mode',
                   style: TextStyle(color: accent, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isDemo
-                      ? 'Supabase tables are not reachable yet, so the app is showing seeded demo telemetry.'
+                  isSetup
+                      ? 'Supabase credentials are missing or incomplete for this build.'
+                      : noData
+                      ? 'The app is connected, but no real zone or sensor records have arrived yet.'
                       : 'Supabase farm tables are live and the app is reading real project data.',
                   style: TextStyle(color: accent),
                 ),

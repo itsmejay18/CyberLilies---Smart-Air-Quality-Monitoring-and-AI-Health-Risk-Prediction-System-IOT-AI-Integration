@@ -42,13 +42,17 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
         value: details,
         loadingMessage: 'Loading zone telemetry...',
         data: (zoneDetails) {
+          final prediction = zoneDetails.prediction;
+          final latest = zoneDetails.latestSensorData;
           final statusColor = StatusColorHelper.forLevel(
-            zoneDetails.prediction.stressLevel,
+            prediction?.stressLevel ?? zoneDetails.zone.predictedStress,
           );
-          final translator = plantTranslatorMessage(
-            zone: zoneDetails.zone,
-            prediction: zoneDetails.prediction,
-          );
+          final translator = prediction == null
+              ? 'No AI prediction yet. Connect an ESP32 node and send sensor readings to generate plant insights.'
+              : plantTranslatorMessage(
+                  zone: zoneDetails.zone,
+                  prediction: prediction,
+                );
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -103,26 +107,30 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   SensorMetricTile(
                     icon: Icons.water_drop_outlined,
                     label: 'Soil Moisture',
-                    value:
-                        '${zoneDetails.latestSensorData.soilMoisture.toStringAsFixed(1)}%',
+                    value: latest == null
+                        ? '--'
+                        : '${latest.soilMoisture.toStringAsFixed(1)}%',
                   ),
                   SensorMetricTile(
                     icon: Icons.thermostat_outlined,
                     label: 'Temperature',
-                    value:
-                        '${zoneDetails.latestSensorData.temperature.toStringAsFixed(1)}C',
+                    value: latest == null
+                        ? '--'
+                        : '${latest.temperature.toStringAsFixed(1)}C',
                   ),
                   SensorMetricTile(
                     icon: Icons.waterfall_chart,
                     label: 'Humidity',
-                    value:
-                        '${zoneDetails.latestSensorData.humidity.toStringAsFixed(1)}%',
+                    value: latest == null
+                        ? '--'
+                        : '${latest.humidity.toStringAsFixed(1)}%',
                   ),
                   SensorMetricTile(
                     icon: Icons.psychology_outlined,
                     label: 'Stress Probability',
-                    value:
-                        '${(zoneDetails.prediction.stressProbability * 100).toStringAsFixed(0)}%',
+                    value: prediction == null
+                        ? '--'
+                        : '${(prediction.stressProbability * 100).toStringAsFixed(0)}%',
                   ),
                 ],
               ),
@@ -138,10 +146,15 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
-                      Text(zoneDetails.prediction.summary),
+                      Text(
+                        prediction?.summary ??
+                            'No forecast is available yet for this zone.',
+                      ),
                       const SizedBox(height: 8),
                       Text(
-                        'Next ${zoneDetails.prediction.forecastHours} hours',
+                        prediction == null
+                            ? 'Waiting for telemetry'
+                            : 'Next ${prediction.forecastHours} hours',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 8),
@@ -188,7 +201,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Irrigation ${action.status}: ${action.notes}',
+                        action.status == 'failed'
+                            ? action.notes
+                            : 'Irrigation ${action.status}: ${action.notes}',
                       ),
                     ),
                   );

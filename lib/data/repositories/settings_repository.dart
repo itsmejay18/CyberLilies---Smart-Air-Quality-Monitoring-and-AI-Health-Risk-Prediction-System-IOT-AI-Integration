@@ -48,7 +48,7 @@ class SettingsRepository {
 
     return AppSettings(
       userId: userId,
-      fullName: 'Demo Farmer',
+      fullName: 'Farmer',
       email: email,
       autoIrrigationEnabled: true,
       notificationsEnabled: true,

@@ -103,7 +103,7 @@ class AuthRepository {
     return UserProfile(
       id: AppConstants.mockUserId,
       email: email,
-      fullName: 'Demo Farmer',
+      fullName: 'Farmer',
     );
   }
 
