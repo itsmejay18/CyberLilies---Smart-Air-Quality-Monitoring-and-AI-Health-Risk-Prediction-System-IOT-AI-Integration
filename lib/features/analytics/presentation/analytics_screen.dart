@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../data/models/sensor_data_point.dart';
 import '../../../data/repositories/farm_repository.dart';
+import '../../../presentation/widgets/empty_state_card.dart';
 import '../../dashboard/application/dashboard_providers.dart';
 import '../../zone/application/zone_providers.dart';
 import '../application/analytics_providers.dart';
@@ -23,6 +24,20 @@ class AnalyticsScreen extends ConsumerWidget {
       value: zones,
       loadingMessage: 'Preparing analytics...',
       data: (zoneItems) {
+        if (zoneItems.isEmpty) {
+          return ListView(
+            padding: EdgeInsets.all(16),
+            children: [
+              EmptyStateCard(
+                icon: Icons.insights_outlined,
+                title: 'No analytics yet',
+                message:
+                    'Add farm zones and sensor records in Supabase to unlock live analytics here.',
+              ),
+            ],
+          );
+        }
+
         final zoneId = selectedZoneId ?? zoneItems.first.id;
         final history = ref.watch(
           zoneHistoryProvider((zoneId: zoneId, range: range)),
@@ -31,6 +46,37 @@ class AnalyticsScreen extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E5631), Color(0xFF4C9A5F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Crop climate trends',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Track soil moisture, temperature, and humidity patterns over time.',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -71,15 +117,66 @@ class AnalyticsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             history.when(
-              data: (points) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: SizedBox(
-                    height: 340,
-                    child: _AnalyticsChart(points: points.reversed.toList()),
-                  ),
-                ),
-              ),
+              data: (points) {
+                final orderedPoints = points.reversed.toList();
+                if (orderedPoints.isEmpty) {
+                  return const EmptyStateCard(
+                    icon: Icons.show_chart,
+                    title: 'No history for this zone',
+                    message:
+                        'Once sensors start sending values, trend charts will appear here.',
+                  );
+                }
+
+                final latest = orderedPoints.last;
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MetricSummaryCard(
+                            label: 'Soil Moisture',
+                            value: '${latest.soilMoisture.toStringAsFixed(1)}%',
+                            color: const Color(0xFF2F7D32),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _MetricSummaryCard(
+                            label: 'Temperature',
+                            value: '${latest.temperature.toStringAsFixed(1)}C',
+                            color: const Color(0xFFE65100),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _MetricSummaryCard(
+                            label: 'Humidity',
+                            value: '${latest.humidity.toStringAsFixed(1)}%',
+                            color: const Color(0xFF0277BD),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            const _ChartLegend(),
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              height: 340,
+                              child: _AnalyticsChart(points: orderedPoints),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
               loading: () => const Card(
                 child: Padding(
                   padding: EdgeInsets.all(32),
@@ -96,6 +193,90 @@ class AnalyticsScreen extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _MetricSummaryCard extends StatelessWidget {
+  const _MetricSummaryCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChartLegend extends StatelessWidget {
+  const _ChartLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: const [
+        _LegendChip(label: 'Soil Moisture', color: Color(0xFF2F7D32)),
+        _LegendChip(label: 'Temperature', color: Color(0xFFE65100)),
+        _LegendChip(label: 'Humidity', color: Color(0xFF0277BD)),
+      ],
+    );
+  }
+}
+
+class _LegendChip extends StatelessWidget {
+  const _LegendChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
     );
   }
 }

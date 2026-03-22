@@ -8,6 +8,7 @@ import '../../../core/utils/status_color_helper.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../data/models/sensor_data_point.dart';
 import '../../../data/repositories/farm_repository.dart';
+import '../../../presentation/widgets/empty_state_card.dart';
 import '../../../presentation/widgets/sensor_metric_tile.dart';
 import '../../../presentation/widgets/time_range_selector.dart';
 import '../../dashboard/application/dashboard_providers.dart';
@@ -195,12 +196,23 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                       ),
                       const SizedBox(height: 16),
                       history.when(
-                        data: (points) => SizedBox(
-                          height: 280,
-                          child: _HistoryChart(
-                            points: points.reversed.toList(),
-                          ),
-                        ),
+                        data: (points) {
+                          if (points.isEmpty) {
+                            return const EmptyStateCard(
+                              icon: Icons.timeline,
+                              title: 'No history yet',
+                              message:
+                                  'Sensor history will appear here after telemetry records start arriving.',
+                            );
+                          }
+
+                          return SizedBox(
+                            height: 280,
+                            child: _HistoryChart(
+                              points: points.reversed.toList(),
+                            ),
+                          );
+                        },
                         loading: () => const Padding(
                           padding: EdgeInsets.all(24),
                           child: Center(child: CircularProgressIndicator()),

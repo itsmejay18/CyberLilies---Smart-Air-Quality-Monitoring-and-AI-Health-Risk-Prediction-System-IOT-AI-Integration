@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../presentation/widgets/zone_card.dart';
+import '../../../presentation/widgets/runtime_status_banner.dart';
 import '../../alerts/application/alerts_providers.dart';
 import '../application/dashboard_providers.dart';
 
@@ -14,6 +15,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final zones = ref.watch(zonesProvider);
     final unreadCount = ref.watch(unreadAlertsCountProvider);
+    final runtimeStatus = ref.watch(appRuntimeStatusProvider).asData?.value;
 
     return AsyncValueWidget(
       value: zones,
@@ -24,6 +26,42 @@ class DashboardScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2F7D32), Color(0xFF7FB069)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Farm overview',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.white70),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Monitor plant health, stress signals, and irrigation activity across all zones.',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              if (runtimeStatus != null) ...[
+                const SizedBox(height: 16),
+                RuntimeStatusBanner(status: runtimeStatus),
+              ],
+              const SizedBox(height: 16),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -65,7 +103,6 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
               for (final zone in items) ...[
                 ZoneCard(
                   zone: zone,

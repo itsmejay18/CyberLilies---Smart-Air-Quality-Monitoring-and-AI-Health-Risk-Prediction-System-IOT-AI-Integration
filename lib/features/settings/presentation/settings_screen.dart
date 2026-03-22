@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../data/models/app_settings.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../dashboard/application/dashboard_providers.dart';
 import '../application/settings_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -30,6 +31,7 @@ class _SettingsBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(settingsControllerProvider);
+    final runtimeStatus = ref.watch(appRuntimeStatusProvider).asData?.value;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -41,6 +43,28 @@ class _SettingsBody extends ConsumerWidget {
             subtitle: Text(settings.email),
           ),
         ),
+        if (runtimeStatus != null) ...[
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: Icon(
+                runtimeStatus.isDemoMode
+                    ? Icons.cloud_off_outlined
+                    : Icons.cloud_done_outlined,
+              ),
+              title: Text(
+                runtimeStatus.isDemoMode
+                    ? 'Demo Mode Active'
+                    : 'Live Data Active',
+              ),
+              subtitle: Text(
+                runtimeStatus.isDemoMode
+                    ? 'Supabase farm tables or AI services are still unavailable, so the app is using demo telemetry.'
+                    : 'The app can reach your live farm data services.',
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         Card(
           child: SwitchListTile(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../presentation/widgets/empty_state_card.dart';
 import '../../dashboard/application/dashboard_providers.dart';
 import '../application/alerts_providers.dart';
 
@@ -17,6 +18,20 @@ class AlertsScreen extends ConsumerWidget {
       value: alerts,
       loadingMessage: 'Checking farm alerts...',
       data: (items) {
+        if (items.isEmpty) {
+          return ListView(
+            padding: EdgeInsets.all(16),
+            children: [
+              EmptyStateCard(
+                icon: Icons.notifications_none,
+                title: 'No alerts right now',
+                message:
+                    'When drought predictions, anomalies, or irrigation actions occur, they will appear here.',
+              ),
+            ],
+          );
+        }
+
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(alertsProvider),
           child: ListView(
