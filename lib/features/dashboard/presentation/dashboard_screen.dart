@@ -9,6 +9,7 @@ import '../../../presentation/widgets/iot_device_card.dart';
 import '../../../presentation/widgets/zone_card.dart';
 import '../../../presentation/widgets/runtime_status_banner.dart';
 import '../../alerts/application/alerts_providers.dart';
+import '../../devices/application/device_providers.dart';
 import '../application/dashboard_providers.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -160,7 +161,7 @@ class DashboardScreen extends ConsumerWidget {
                   icon: Icons.dashboard_outlined,
                   title: 'No zones loaded yet',
                   message:
-                      'This app stays empty until real zone rows and sensor telemetry are stored in Supabase.',
+                      'This app stays empty until real zone data and sensor telemetry are available.',
                 ),
                 const SizedBox(height: 12),
               ],

@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/async_value_widget.dart';
-import '../../../data/models/zone.dart';
 import '../../../presentation/widgets/empty_state_card.dart';
 import '../../../presentation/widgets/iot_device_card.dart';
-import '../../dashboard/application/dashboard_providers.dart';
+import '../application/device_providers.dart';
 
 class DevicesScreen extends ConsumerWidget {
   const DevicesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final zones = ref.watch(zonesProvider);
     final devices = ref.watch(iotDevicesProvider);
-    final runtimeStatus = ref.watch(appRuntimeStatusProvider).asData?.value;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Devices')),
@@ -35,18 +32,8 @@ class DevicesScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Register a device to a farm zone first. After that, flash the ESP32 with the backend URL and matching device id so real telemetry starts appearing in the app.',
+                    'Register an ESP32 directly in the app. This pairing setup is stored locally on the device, so you can prepare the hardware flow even without Supabase.',
                   ),
-                  if (runtimeStatus != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      runtimeStatus.liveDataAvailable
-                          ? 'Backend status: connected to live data'
-                          : runtimeStatus.needsSetup
-                          ? 'Backend status: setup still incomplete'
-                          : 'Backend status: connected but waiting for real telemetry',
-                    ),
-                  ],
                   const SizedBox(height: 16),
                   FilledButton.icon(
                     onPressed: () => _showRegisterSheet(context, ref),
@@ -84,21 +71,11 @@ class DevicesScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 8),
-          AsyncValueWidget(
-            value: zones,
-            loadingMessage: 'Loading available zones...',
-            data: (items) {
-              if (items.isEmpty) {
-                return const EmptyStateCard(
-                  icon: Icons.map_outlined,
-                  title: 'No zones available for pairing',
-                  message:
-                      'Create zone rows in Supabase first. Device registration depends on a real zone id.',
-                );
-              }
-
-              return const SizedBox.shrink();
-            },
+          const EmptyStateCard(
+            icon: Icons.info_outline,
+            title: 'App-managed setup',
+            message:
+                'Devices registered here are kept in local app storage. You can later connect telemetry delivery however you want.',
           ),
         ],
       ),
@@ -106,22 +83,10 @@ class DevicesScreen extends ConsumerWidget {
   }
 
   Future<void> _showRegisterSheet(BuildContext context, WidgetRef ref) async {
-    final zones = ref.read(zonesProvider).asData?.value ?? const <Zone>[];
-    if (zones.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Create at least one real zone in Supabase before registering a device.',
-          ),
-        ),
-      );
-      return;
-    }
-
     final formKey = GlobalKey<FormState>();
     final deviceIdController = TextEditingController();
     final deviceNameController = TextEditingController();
-    var selectedZoneId = zones.first.id;
+    final zoneIdController = TextEditingController();
 
     await showModalBottomSheet<void>(
       context: context,
@@ -169,21 +134,15 @@ class DevicesScreen extends ConsumerWidget {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedZoneId,
-                      decoration: const InputDecoration(labelText: 'Zone'),
-                      items: [
-                        for (final zone in zones)
-                          DropdownMenuItem(
-                            value: zone.id,
-                            child: Text(zone.name),
-                          ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => selectedZoneId = value);
-                        }
-                      },
+                    TextFormField(
+                      controller: zoneIdController,
+                      decoration: const InputDecoration(
+                        labelText: 'Zone ID',
+                        hintText: 'north-field',
+                      ),
+                      validator: (value) => value == null || value.trim().isEmpty
+                          ? 'Zone id is required'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
@@ -191,9 +150,12 @@ class DevicesScreen extends ConsumerWidget {
                         if (!formKey.currentState!.validate()) return;
 
                         try {
-                          await ref.read(farmRepositoryProvider).registerDevice(
+                          final repository = await ref.read(
+                            localDeviceRepositoryProvider.future,
+                          );
+                          await repository.registerDevice(
                             deviceId: deviceIdController.text.trim(),
-                            zoneId: selectedZoneId,
+                            zoneId: zoneIdController.text.trim(),
                             deviceName: deviceNameController.text.trim(),
                           );
                           ref.invalidate(iotDevicesProvider);
@@ -228,6 +190,7 @@ class DevicesScreen extends ConsumerWidget {
 
     deviceIdController.dispose();
     deviceNameController.dispose();
+    zoneIdController.dispose();
   }
 }
 
@@ -249,13 +212,13 @@ class _ConnectionSteps extends StatelessWidget {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            const Text('1. Create real zone rows in Supabase.'),
+            const Text('1. Open the app and register your ESP32 node here.'),
             const SizedBox(height: 6),
-            const Text('2. Register the ESP32 here with its real device id.'),
+            const Text('2. Enter the same device id and zone id you plan to use on the hardware.'),
             const SizedBox(height: 6),
-            const Text('3. Flash the ESP32 with the same device id and backend URL.'),
+            const Text('3. Flash the ESP32 with the same device id and your chosen transport setup.'),
             const SizedBox(height: 6),
-            const Text('4. Once telemetry reaches the backend, the device status becomes live in the app.'),
+            const Text('4. The app keeps the pairing record locally, even without Supabase.'),
           ],
         ),
       ),
