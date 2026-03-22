@@ -27,6 +27,7 @@ If Supabase credentials are missing, the app starts in a local demo mode with mo
 - `predictions`
 - `alerts`
 - `actions`
+- `iot_devices`
 
 ## Included Features
 
@@ -42,3 +43,4 @@ If Supabase credentials are missing, the app starts in a local demo mode with mo
 - [supabasetable.txt](c:/Users/Jay/Documents/GitHub/CyberLilies---Smart-Air-Quality-Monitoring-and-AI-Health-Risk-Prediction-System-IOT-AI-Integration/supabasetable.txt)
 - [schema.sql](c:/Users/Jay/Documents/GitHub/CyberLilies---Smart-Air-Quality-Monitoring-and-AI-Health-Risk-Prediction-System-IOT-AI-Integration/supabase/schema.sql)
 - [seed.sql](c:/Users/Jay/Documents/GitHub/CyberLilies---Smart-Air-Quality-Monitoring-and-AI-Health-Risk-Prediction-System-IOT-AI-Integration/supabase/seed.sql)
+- [iot_payload.md](c:/Users/Jay/Documents/GitHub/CyberLilies---Smart-Air-Quality-Monitoring-and-AI-Health-Risk-Prediction-System-IOT-AI-Integration/docs/iot_payload.md)

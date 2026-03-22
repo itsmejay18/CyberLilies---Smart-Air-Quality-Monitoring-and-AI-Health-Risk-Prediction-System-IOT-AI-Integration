@@ -74,6 +74,22 @@ create table if not exists public.actions (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.iot_devices (
+  id text primary key,
+  zone_id text not null references public.zones (id) on delete cascade,
+  name text not null,
+  connection_state text not null default 'online'
+    check (connection_state in ('online', 'warning', 'offline')),
+  last_seen timestamptz not null default now(),
+  battery_level integer not null default 100,
+  signal_strength integer not null default 100,
+  firmware_version text not null default '1.0.0',
+  pump_online boolean not null default true,
+  pending_sync boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists idx_sensor_data_zone_recorded_at
   on public.sensor_data (zone_id, recorded_at desc);
 
@@ -85,6 +101,9 @@ create index if not exists idx_alerts_created_at
 
 create index if not exists idx_actions_zone_created_at
   on public.actions (zone_id, created_at desc);
+
+create index if not exists idx_iot_devices_zone_last_seen
+  on public.iot_devices (zone_id, last_seen desc);
 
 drop trigger if exists trg_users_updated_at on public.users;
 create trigger trg_users_updated_at
@@ -98,12 +117,19 @@ before update on public.zones
 for each row
 execute function public.handle_updated_at();
 
+drop trigger if exists trg_iot_devices_updated_at on public.iot_devices;
+create trigger trg_iot_devices_updated_at
+before update on public.iot_devices
+for each row
+execute function public.handle_updated_at();
+
 alter table public.users enable row level security;
 alter table public.zones enable row level security;
 alter table public.sensor_data enable row level security;
 alter table public.predictions enable row level security;
 alter table public.alerts enable row level security;
 alter table public.actions enable row level security;
+alter table public.iot_devices enable row level security;
 
 drop policy if exists "users_select_own_profile" on public.users;
 create policy "users_select_own_profile"
@@ -197,6 +223,28 @@ create policy "actions_insert_authenticated"
 on public.actions
 for insert
 to authenticated
+with check (true);
+
+drop policy if exists "iot_devices_read_authenticated" on public.iot_devices;
+create policy "iot_devices_read_authenticated"
+on public.iot_devices
+for select
+to authenticated
+using (true);
+
+drop policy if exists "iot_devices_insert_authenticated" on public.iot_devices;
+create policy "iot_devices_insert_authenticated"
+on public.iot_devices
+for insert
+to authenticated
+with check (true);
+
+drop policy if exists "iot_devices_update_authenticated" on public.iot_devices;
+create policy "iot_devices_update_authenticated"
+on public.iot_devices
+for update
+to authenticated
+using (true)
 with check (true);
 
 insert into public.zones (

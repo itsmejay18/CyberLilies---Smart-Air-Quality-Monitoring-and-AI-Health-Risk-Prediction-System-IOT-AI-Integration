@@ -55,6 +55,20 @@ SUPABASE TABLE DESIGN FOR SMART FARM APP
 - notes text
 - created_at timestamptz default now()
 
+7. iot_devices
+- id text primary key
+- zone_id text references zones(id) on delete cascade
+- name text not null
+- connection_state text check online|warning|offline
+- last_seen timestamptz default now()
+- battery_level integer default 100
+- signal_strength integer default 100
+- firmware_version text default '1.0.0'
+- pump_online boolean default true
+- pending_sync boolean default false
+- created_at timestamptz default now()
+- updated_at timestamptz default now()
+
 EXPECTED APP QUERIES
 - auth profile settings from users by authenticated auth.users.id
 - dashboard reads zones
@@ -62,7 +76,9 @@ EXPECTED APP QUERIES
 - ai fallback reads predictions by zone_id latest created_at
 - alerts feed reads alerts latest first
 - manual irrigation logs actions
+- device monitoring reads iot_devices by zone_id and last_seen
 
 SQL FILES
 - supabase/schema.sql
 - supabase/seed.sql
+- docs/iot_payload.md

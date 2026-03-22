@@ -93,3 +93,30 @@ on conflict (id) do update set
   status = excluded.status,
   notes = excluded.notes,
   created_at = excluded.created_at;
+
+insert into public.iot_devices (
+  id,
+  zone_id,
+  name,
+  connection_state,
+  last_seen,
+  battery_level,
+  signal_strength,
+  firmware_version,
+  pump_online,
+  pending_sync
+)
+values
+  ('node-1', 'zone-1', 'ESP32 North Field', 'online', now() - interval '2 minutes', 92, 88, '1.2.4', true, false),
+  ('node-2', 'zone-2', 'ESP32 Greenhouse A', 'warning', now() - interval '12 minutes', 44, 57, '1.2.3', true, true),
+  ('node-3', 'zone-3', 'ESP32 Seedling Bed', 'online', now() - interval '5 minutes', 76, 80, '1.2.4', false, false)
+on conflict (id) do update set
+  zone_id = excluded.zone_id,
+  name = excluded.name,
+  connection_state = excluded.connection_state,
+  last_seen = excluded.last_seen,
+  battery_level = excluded.battery_level,
+  signal_strength = excluded.signal_strength,
+  firmware_version = excluded.firmware_version,
+  pump_online = excluded.pump_online,
+  pending_sync = excluded.pending_sync;
