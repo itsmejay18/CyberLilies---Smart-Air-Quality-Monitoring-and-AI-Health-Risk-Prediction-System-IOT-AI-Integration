@@ -32,11 +32,25 @@ class AuthRepository {
       final user = _supabaseClient.auth.currentUser;
       if (user == null) return null;
 
-      return UserProfile(
-        id: user.id,
-        email: user.email ?? '',
-        fullName: user.userMetadata?['full_name'] as String? ?? 'Farmer',
-      );
+      try {
+        final profile = await _supabaseClient
+            .from('users')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile != null) {
+          return UserProfile.fromMap({
+            'id': user.id,
+            'email': user.email,
+            ...profile,
+          });
+        }
+      } catch (_) {
+        // Fall back to the auth profile when the users table is not ready.
+      }
+
+      return _supabaseUserToProfile(user);
     }
 
     return _mockUser();
@@ -44,10 +58,11 @@ class AuthRepository {
 
   Future<void> signIn({required String email, required String password}) async {
     if (_supabaseClient != null) {
-      await _supabaseClient.auth.signInWithPassword(
+      final response = await _supabaseClient.auth.signInWithPassword(
         email: email,
         password: password,
       );
+      await _syncSupabaseProfile(response.user, fallbackFullName: 'Farmer');
       return;
     }
 
@@ -60,11 +75,12 @@ class AuthRepository {
     required String fullName,
   }) async {
     if (_supabaseClient != null) {
-      await _supabaseClient.auth.signUp(
+      final response = await _supabaseClient.auth.signUp(
         email: email,
         password: password,
         data: {'full_name': fullName},
       );
+      await _syncSupabaseProfile(response.user, fallbackFullName: fullName);
       return;
     }
 
@@ -89,6 +105,33 @@ class AuthRepository {
       email: email,
       fullName: 'Demo Farmer',
     );
+  }
+
+  UserProfile _supabaseUserToProfile(User user) {
+    return UserProfile(
+      id: user.id,
+      email: user.email ?? '',
+      fullName: user.userMetadata?['full_name'] as String? ?? 'Farmer',
+    );
+  }
+
+  Future<void> _syncSupabaseProfile(
+    User? user, {
+    required String fallbackFullName,
+  }) async {
+    final client = _supabaseClient;
+    if (client == null || user == null) return;
+
+    try {
+      await client.from('users').upsert({
+        'id': user.id,
+        'email': user.email ?? '',
+        'full_name':
+            user.userMetadata?['full_name'] as String? ?? fallbackFullName,
+      });
+    } catch (_) {
+      // Ignore until the users table exists.
+    }
   }
 }
 

@@ -38,6 +38,9 @@ class FarmRepository {
         final zones = (zoneRows as List<dynamic>)
             .map((item) => Zone.fromMap(item as Map<String, dynamic>))
             .toList();
+        if (zones.isEmpty) {
+          return _mockZones();
+        }
         return Future.wait(zones.map(_enrichZone));
       } catch (_) {
         return _mockZones();
@@ -60,10 +63,13 @@ class FarmRepository {
     );
     final prediction = await fetchPrediction(zoneId);
     final action = await fetchLastAction(zoneId);
+    final latestSensorData = history.isNotEmpty
+        ? history.first
+        : _mockHistory(zoneId, AnalyticsRange.last24Hours).first;
 
     return ZoneDetails(
       zone: zone,
-      latestSensorData: history.first,
+      latestSensorData: latestSensorData,
       prediction: prediction,
       lastAction: action,
     );

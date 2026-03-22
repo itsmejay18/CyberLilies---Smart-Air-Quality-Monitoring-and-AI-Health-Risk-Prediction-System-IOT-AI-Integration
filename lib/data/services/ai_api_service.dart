@@ -45,4 +45,13 @@ class AiApiService {
         .map((item) => FarmAlert.fromMap(item as Map<String, dynamic>))
         .toList();
   }
+
+  Future<bool> ping() async {
+    try {
+      final response = await _dio.get('/docs');
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 }

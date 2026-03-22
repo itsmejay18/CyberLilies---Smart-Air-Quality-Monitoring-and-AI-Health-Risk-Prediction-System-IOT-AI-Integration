@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/alerts/application/alerts_providers.dart';
 import '../features/alerts/presentation/alerts_screen.dart';
 import '../features/analytics/presentation/analytics_screen.dart';
+import '../features/dashboard/application/dashboard_providers.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'widgets/alert_badge.dart';
@@ -30,9 +31,41 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final unreadCount = ref.watch(unreadAlertsCountProvider);
+    final runtimeStatus = ref.watch(appRuntimeStatusProvider).asData?.value;
 
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_index])),
+      appBar: AppBar(
+        title: Text(_titles[_index]),
+        actions: [
+          if (runtimeStatus != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: runtimeStatus.isDemoMode
+                        ? Colors.amber.shade100
+                        : Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    runtimeStatus.isDemoMode ? 'DEMO' : 'LIVE',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: runtimeStatus.isDemoMode
+                          ? Colors.amber.shade900
+                          : Colors.green.shade900,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,

@@ -1,0 +1,92 @@
+import 'package:flutter/material.dart';
+
+import '../../core/models/app_runtime_status.dart';
+
+class RuntimeStatusBanner extends StatelessWidget {
+  const RuntimeStatusBanner({super.key, required this.status});
+
+  final AppRuntimeStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDemo = status.isDemoMode;
+    final tone = isDemo ? Colors.amber.shade100 : Colors.green.shade100;
+    final accent = isDemo ? Colors.amber.shade900 : Colors.green.shade900;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: tone,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isDemo ? Icons.science_outlined : Icons.cloud_done_outlined,
+            color: accent,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isDemo ? 'Demo data mode' : 'Live data mode',
+                  style: TextStyle(color: accent, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isDemo
+                      ? 'Supabase tables are not reachable yet, so the app is showing seeded demo telemetry.'
+                      : 'Supabase farm tables are live and the app is reading real project data.',
+                  style: TextStyle(color: accent),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _MiniPill(
+                      label: status.supabaseConfigured
+                          ? 'Supabase configured'
+                          : 'Supabase missing',
+                    ),
+                    _MiniPill(
+                      label: status.aiServerAvailable
+                          ? 'AI server online'
+                          : 'AI server offline',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniPill extends StatelessWidget {
+  const _MiniPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
