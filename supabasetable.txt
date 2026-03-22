@@ -1,0 +1,68 @@
+SUPABASE TABLE DESIGN FOR SMART FARM APP
+
+1. users
+- id uuid primary key references auth.users(id) on delete cascade
+- email text not null
+- full_name text default 'Farmer'
+- auto_irrigation_enabled boolean default true
+- notifications_enabled boolean default true
+- created_at timestamptz default now()
+- updated_at timestamptz default now()
+
+2. zones
+- id text primary key
+- name text not null
+- soil_moisture numeric default 0
+- temperature numeric default 0
+- humidity numeric default 0
+- current_stress text check healthy|warning|critical
+- predicted_stress text check healthy|warning|critical
+- auto_irrigation_enabled boolean default true
+- created_at timestamptz default now()
+- updated_at timestamptz default now()
+
+3. sensor_data
+- id text primary key
+- zone_id text references zones(id) on delete cascade
+- soil_moisture numeric not null
+- temperature numeric not null
+- humidity numeric not null
+- recorded_at timestamptz default now()
+
+4. predictions
+- id uuid primary key default gen_random_uuid()
+- zone_id text references zones(id) on delete cascade
+- stress_probability numeric not null
+- stress_level text check healthy|warning|critical
+- forecast_hours integer default 4
+- summary text
+- created_at timestamptz default now()
+
+5. alerts
+- id text primary key
+- zone_id text references zones(id) on delete cascade
+- title text not null
+- message text not null
+- type text not null
+- is_read boolean default false
+- created_at timestamptz default now()
+
+6. actions
+- id text primary key
+- zone_id text references zones(id) on delete cascade
+- action_type text not null
+- status text not null
+- notes text
+- created_at timestamptz default now()
+
+EXPECTED APP QUERIES
+- auth profile settings from users by authenticated auth.users.id
+- dashboard reads zones
+- history reads sensor_data by zone_id and recorded_at
+- ai fallback reads predictions by zone_id latest created_at
+- alerts feed reads alerts latest first
+- manual irrigation logs actions
+
+SQL FILES
+- supabase/schema.sql
+- supabase/seed.sql
