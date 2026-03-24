@@ -18,7 +18,7 @@ class DevicesScreen extends ConsumerWidget {
     final devices = ref.watch(iotDevicesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Devices')),
+      appBar: AppBar(title: const Text('Sensors')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -29,14 +29,14 @@ class DevicesScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Connect an ESP32 node',
+                    'Connect a sensor node',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Register an ESP32 directly in the app. This pairing setup is stored locally on the device, so you can prepare the hardware flow even without Supabase.',
+                    'Register an ESP32 sensor directly in the app. This pairing setup is stored locally on the device, so you can prepare the hardware flow even without Supabase.',
                   ),
                   const SizedBox(height: 16),
                   Wrap(
@@ -46,7 +46,7 @@ class DevicesScreen extends ConsumerWidget {
                       FilledButton.icon(
                         onPressed: () => _showRegisterSheet(context, ref),
                         icon: const Icon(Icons.add_link),
-                        label: const Text('Register ESP32'),
+                        label: const Text('Register Sensor'),
                       ),
                       OutlinedButton.icon(
                         onPressed: () => _syncAll(context, ref),
@@ -56,7 +56,7 @@ class DevicesScreen extends ConsumerWidget {
                       OutlinedButton.icon(
                         onPressed: () => _clearAllTelemetry(context, ref),
                         icon: const Icon(Icons.delete_sweep_outlined),
-                        label: const Text('Clear Telemetry'),
+                        label: const Text('Clear Readings'),
                       ),
                     ],
                   ),
@@ -74,9 +74,9 @@ class DevicesScreen extends ConsumerWidget {
               if (items.isEmpty) {
                 return const EmptyStateCard(
                   icon: Icons.memory_outlined,
-                  title: 'No devices registered',
+                  title: 'No sensors registered',
                   message:
-                      'Once you register an ESP32 and it starts sending telemetry, it will appear here.',
+                      'Once you register an ESP32 and it starts sending readings, it will appear here.',
                 );
               }
 
@@ -102,9 +102,9 @@ class DevicesScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           const EmptyStateCard(
             icon: Icons.info_outline,
-            title: 'App-managed setup',
+            title: 'Local sensor setup',
             message:
-                'Devices registered here are kept in local app storage. You can later connect telemetry delivery however you want.',
+                'Sensors registered here are kept in local app storage. You can later connect your reading delivery flow however you want.',
           ),
         ],
       ),
@@ -148,7 +148,9 @@ class DevicesScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      existingDevice == null ? 'Register ESP32' : 'Edit ESP32',
+                      existingDevice == null
+                          ? 'Register Sensor'
+                          : 'Edit Sensor',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
@@ -158,7 +160,8 @@ class DevicesScreen extends ConsumerWidget {
                         labelText: 'Device ID',
                         hintText: 'node-1',
                       ),
-                      validator: (value) => value == null || value.trim().isEmpty
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
                           ? 'Device id is required'
                           : null,
                     ),
@@ -167,9 +170,10 @@ class DevicesScreen extends ConsumerWidget {
                       controller: deviceNameController,
                       decoration: const InputDecoration(
                         labelText: 'Device name',
-                        hintText: 'ESP32 North Field',
+                        hintText: 'AIRA North Sensor',
                       ),
-                      validator: (value) => value == null || value.trim().isEmpty
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
                           ? 'Device name is required'
                           : null,
                     ),
@@ -177,21 +181,23 @@ class DevicesScreen extends ConsumerWidget {
                     TextFormField(
                       controller: zoneIdController,
                       decoration: const InputDecoration(
-                        labelText: 'Zone ID',
-                        hintText: 'north-field',
+                        labelText: 'Area ID',
+                        hintText: 'downtown-north',
                       ),
-                      validator: (value) => value == null || value.trim().isEmpty
-                          ? 'Zone id is required'
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Area id is required'
                           : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: endpointController,
                       decoration: const InputDecoration(
-                        labelText: 'ESP32 endpoint',
+                        labelText: 'Sensor endpoint',
                         hintText: '192.168.1.50:80',
                       ),
-                      validator: (value) => value == null || value.trim().isEmpty
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
                           ? 'Endpoint is required'
                           : null,
                     ),
@@ -218,8 +224,8 @@ class DevicesScreen extends ConsumerWidget {
                             SnackBar(
                               content: Text(
                                 existingDevice == null
-                                    ? 'ESP32 registered. Start sending telemetry to complete the connection.'
-                                    : 'ESP32 settings updated.',
+                                    ? 'Sensor registered. Start sending readings to complete the connection.'
+                                    : 'Sensor settings updated.',
                               ),
                             ),
                           );
@@ -227,7 +233,9 @@ class DevicesScreen extends ConsumerWidget {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Could not register device: $error'),
+                              content: Text(
+                                'Could not register device: $error',
+                              ),
                             ),
                           );
                         }
@@ -253,14 +261,16 @@ class DevicesScreen extends ConsumerWidget {
     final devices = await ref.read(iotDevicesProvider.future);
     if (devices.isEmpty) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No devices to sync yet.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No sensors to sync yet.')));
       return;
     }
 
     final service = ref.read(esp32DeviceServiceProvider);
-    final deviceRepository = await ref.read(localDeviceRepositoryProvider.future);
+    final deviceRepository = await ref.read(
+      localDeviceRepositoryProvider.future,
+    );
     final telemetryRepository = await ref.read(
       localTelemetryRepositoryProvider.future,
     );
@@ -308,7 +318,7 @@ class DevicesScreen extends ConsumerWidget {
     _invalidateAll(ref);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('All local telemetry history cleared.')),
+      const SnackBar(content: Text('All local sensor history cleared.')),
     );
   }
 
@@ -346,7 +356,7 @@ class _DeviceActions extends ConsumerWidget {
         FilledButton.tonalIcon(
           onPressed: () => _irrigate(context, ref),
           icon: const Icon(Icons.water_drop_outlined),
-          label: const Text('Irrigate'),
+          label: const Text('Trigger Output'),
         ),
         OutlinedButton.icon(
           onPressed: onEdit,
@@ -394,7 +404,9 @@ class _DeviceActions extends ConsumerWidget {
 
   Future<void> _sync(BuildContext context, WidgetRef ref) async {
     final service = ref.read(esp32DeviceServiceProvider);
-    final deviceRepository = await ref.read(localDeviceRepositoryProvider.future);
+    final deviceRepository = await ref.read(
+      localDeviceRepositoryProvider.future,
+    );
     final telemetryRepository = await ref.read(
       localTelemetryRepositoryProvider.future,
     );
@@ -417,9 +429,7 @@ class _DeviceActions extends ConsumerWidget {
       _invalidateAll(ref);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Synced live telemetry from ${device.name}.'),
-        ),
+        SnackBar(content: Text('Synced live readings from ${device.name}.')),
       );
     } catch (error) {
       await deviceRepository.saveDevice(
@@ -430,15 +440,17 @@ class _DeviceActions extends ConsumerWidget {
       );
       ref.invalidate(iotDevicesProvider);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sync failed: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Sync failed: $error')));
     }
   }
 
   Future<void> _irrigate(BuildContext context, WidgetRef ref) async {
     final service = ref.read(esp32DeviceServiceProvider);
-    final deviceRepository = await ref.read(localDeviceRepositoryProvider.future);
+    final deviceRepository = await ref.read(
+      localDeviceRepositoryProvider.future,
+    );
     try {
       await service.triggerIrrigation(device);
       await deviceRepository.saveDevice(
@@ -451,12 +463,12 @@ class _DeviceActions extends ConsumerWidget {
       _invalidateAll(ref);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Irrigation triggered on ${device.name}.')),
+        SnackBar(content: Text('Output triggered on ${device.name}.')),
       );
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not trigger irrigation: $error')),
+        SnackBar(content: Text('Could not trigger device output: $error')),
       );
     }
   }
@@ -478,12 +490,14 @@ class _DeviceActions extends ConsumerWidget {
     _invalidateAll(ref);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Cleared local telemetry for ${device.name}.')),
+      SnackBar(content: Text('Cleared local readings for ${device.name}.')),
     );
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final deviceRepository = await ref.read(localDeviceRepositoryProvider.future);
+    final deviceRepository = await ref.read(
+      localDeviceRepositoryProvider.future,
+    );
     await deviceRepository.deleteDevice(device.id);
     _invalidateAll(ref);
     if (!context.mounted) return;
@@ -511,13 +525,19 @@ class _ConnectionSteps extends StatelessWidget {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            const Text('1. Open the app and register your ESP32 node here.'),
+            const Text('1. Open the app and register your ESP32 sensor here.'),
             const SizedBox(height: 6),
-            const Text('2. Enter the same device id and zone id you plan to use on the hardware.'),
+            const Text(
+              '2. Enter the same device id and area id you plan to use on the hardware.',
+            ),
             const SizedBox(height: 6),
-            const Text('3. Flash the ESP32 with the same device id and your chosen transport setup.'),
+            const Text(
+              '3. Flash the ESP32 with the same device id and your chosen transport setup.',
+            ),
             const SizedBox(height: 6),
-            const Text('4. The app keeps the pairing record locally, even without Supabase.'),
+            const Text(
+              '4. The app keeps the pairing record locally, even without Supabase.',
+            ),
           ],
         ),
       ),

@@ -59,14 +59,14 @@ class _SettingsBody extends ConsumerWidget {
                     ? 'Live Data Active'
                     : runtimeStatus.needsSetup
                     ? 'Backend Setup Required'
-                    : 'Waiting for Live Data',
+                    : 'Waiting for Live Readings',
               ),
               subtitle: Text(
                 runtimeStatus.liveDataAvailable
-                    ? 'The app can reach your live farm data services.'
+                    ? 'The app can reach your live environmental data services.'
                     : runtimeStatus.needsSetup
-                    ? 'Configure Supabase and the backend before users can receive telemetry.'
-                    : 'No zone telemetry is loaded until real records arrive from your devices and database.',
+                    ? 'Configure Supabase and the backend before users can receive environmental readings.'
+                    : 'No readings are loaded until real records arrive from your sensors and database.',
               ),
             ),
           ),
@@ -75,9 +75,9 @@ class _SettingsBody extends ConsumerWidget {
         Card(
           child: ListTile(
             leading: const Icon(Icons.memory_outlined),
-            title: const Text('Devices'),
+            title: const Text('Sensors'),
             subtitle: const Text(
-              'Register and connect ESP32 sensor nodes to your farm zones.',
+              'Register and connect ESP32 sensor nodes to your monitoring areas.',
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/devices'),
@@ -87,9 +87,9 @@ class _SettingsBody extends ConsumerWidget {
         Card(
           child: SwitchListTile(
             value: settings.autoIrrigationEnabled,
-            title: const Text('Auto-Irrigation'),
+            title: const Text('Auto Advisories'),
             subtitle: const Text(
-              'Let the system trigger irrigation automatically.',
+              'Let the system generate automated guidance when risk levels change.',
             ),
             onChanged: controller.isLoading
                 ? null
@@ -107,7 +107,9 @@ class _SettingsBody extends ConsumerWidget {
           child: SwitchListTile(
             value: settings.notificationsEnabled,
             title: const Text('Notifications'),
-            subtitle: const Text('Receive drought and anomaly alerts.'),
+            subtitle: const Text(
+              'Receive air quality and respiratory risk alerts.',
+            ),
             onChanged: controller.isLoading
                 ? null
                 : (value) {

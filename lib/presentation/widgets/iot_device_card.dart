@@ -68,7 +68,7 @@ class IoTDeviceCard extends StatelessWidget {
                 _mini(context, 'Firmware', device.firmwareVersion),
                 _mini(
                   context,
-                  'Pump',
+                  'Output',
                   device.pumpOnline ? 'Online' : 'Offline',
                 ),
                 if (!compact)

@@ -48,7 +48,7 @@ class RuntimeStatusBanner extends StatelessWidget {
                   isSetup
                       ? 'Backend setup required'
                       : noData
-                      ? 'Waiting for live telemetry'
+                      ? 'Waiting for live readings'
                       : 'Live data mode',
                   style: TextStyle(color: accent, fontWeight: FontWeight.w700),
                 ),
@@ -57,8 +57,8 @@ class RuntimeStatusBanner extends StatelessWidget {
                   isSetup
                       ? 'Supabase credentials are missing or incomplete for this build.'
                       : noData
-                      ? 'The app is connected, but no real zone or sensor records have arrived yet.'
-                      : 'Supabase farm tables are live and the app is reading real project data.',
+                      ? 'The app is connected, but no real monitoring-area or sensor records have arrived yet.'
+                      : 'Supabase project tables are live and the app is reading real environmental data.',
                   style: TextStyle(color: accent),
                 ),
                 const SizedBox(height: 8),

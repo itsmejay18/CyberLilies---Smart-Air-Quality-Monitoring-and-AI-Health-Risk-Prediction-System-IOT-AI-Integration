@@ -25,7 +25,7 @@ class DashboardScreen extends ConsumerWidget {
 
     return AsyncValueWidget(
       value: zones,
-      loadingMessage: 'Loading live farm zones...',
+      loadingMessage: 'Loading live monitoring areas...',
       data: (items) {
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(zonesProvider),
@@ -46,14 +46,14 @@ class DashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Farm overview',
+                      'Air quality overview',
                       style: Theme.of(
                         context,
                       ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Monitor plant health, stress signals, and irrigation activity across all zones.',
+                      'Monitor environmental conditions, AI health risk signals, and sensor activity across all areas.',
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             color: Colors.white,
@@ -72,11 +72,11 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _StatisticCard(
-                      label: 'Active zones',
+                      label: 'Active areas',
                       value: '${items.length}',
                       icon: Icons.grid_view_rounded,
                       accent: const Color(0xFF2F7D32),
-                      subtitle: 'Zones',
+                      subtitle: 'Areas',
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -92,7 +92,7 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _StatisticCard(
-                      label: 'IoT nodes online',
+                      label: 'Sensor nodes online',
                       value:
                           '${iotDevices.where((device) => device.connectionState == IoTConnectionState.online).length}',
                       icon: Icons.router_outlined,
@@ -105,7 +105,7 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               if (iotDevices.isNotEmpty) ...[
                 Text(
-                  'IoT node monitoring',
+                  'Sensor node monitoring',
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -118,9 +118,9 @@ class DashboardScreen extends ConsumerWidget {
               ] else ...[
                 const EmptyStateCard(
                   icon: Icons.router_outlined,
-                  title: 'No IoT nodes yet',
+                  title: 'No sensor nodes yet',
                   message:
-                      'Register an ESP32 node from the Devices screen, then start sending telemetry to see it here.',
+                      'Register a sensor node from the Devices screen, then start sending readings to see it here.',
                 ),
                 const SizedBox(height: 12),
                 Align(
@@ -128,7 +128,7 @@ class DashboardScreen extends ConsumerWidget {
                   child: FilledButton.tonalIcon(
                     onPressed: () => context.push('/devices'),
                     icon: const Icon(Icons.memory_outlined),
-                    label: const Text('Open Devices'),
+                    label: const Text('Open Sensors'),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -136,9 +136,9 @@ class DashboardScreen extends ConsumerWidget {
               if (items.isEmpty) ...[
                 const EmptyStateCard(
                   icon: Icons.dashboard_outlined,
-                  title: 'No zones loaded yet',
+                  title: 'No monitoring areas loaded yet',
                   message:
-                      'This app stays empty until real zone data and sensor telemetry are available.',
+                      'This app stays empty until real area data and environmental readings are available.',
                 ),
                 const SizedBox(height: 12),
               ],
@@ -214,9 +214,9 @@ class _StatisticCard extends StatelessWidget {
             label,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(

@@ -5,21 +5,20 @@ String plantTranslatorMessage({
   required Zone zone,
   required Prediction prediction,
 }) {
-  final moisture = zone.soilMoisture;
   final forecastHours = prediction.forecastHours;
   final probability = (prediction.stressProbability * 100).round();
 
-  if (prediction.stressLevel == StressLevel.healthy && moisture >= 55) {
-    return 'Your plant is healthy. Soil moisture is stable in ${zone.name}.';
+  if (prediction.stressLevel == StressLevel.healthy) {
+    return 'Air quality conditions are stable in ${zone.name}. Current respiratory risk remains low.';
   }
 
-  if (prediction.stressLevel == StressLevel.warning && moisture < 45) {
-    return 'Warning: Soil moisture is dropping. ${zone.name} may need water soon.';
+  if (prediction.stressLevel == StressLevel.warning) {
+    return 'Conditions in ${zone.name} are changing. Sensitive users should reduce exposure if needed.';
   }
 
   if (prediction.stressLevel == StressLevel.critical) {
-    return 'High risk of drought stress in $forecastHours hours. Estimated risk is $probability%.';
+    return 'Elevated respiratory risk predicted within $forecastHours hours. Estimated risk is $probability%.';
   }
 
-  return 'Conditions are changing. Monitor ${zone.name} over the next $forecastHours hours.';
+  return 'AIRA recommends monitoring ${zone.name} closely over the next $forecastHours hours.';
 }

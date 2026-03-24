@@ -27,7 +27,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     SettingsScreen(),
   ];
 
-  static const _titles = ['Farm Dashboard', 'Alerts', 'Analytics', 'Settings'];
+  static const _titles = [
+    'Air Quality Dashboard',
+    'Alerts',
+    'Analytics',
+    'Settings',
+  ];
 
   @override
   Widget build(BuildContext context) {

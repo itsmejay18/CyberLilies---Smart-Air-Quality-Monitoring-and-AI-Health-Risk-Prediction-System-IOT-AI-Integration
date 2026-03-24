@@ -18,7 +18,7 @@ class AppSettings extends Equatable {
   factory AppSettings.fromMap(Map<String, dynamic> map) {
     return AppSettings(
       userId: map['user_id'] as String? ?? '',
-      fullName: map['full_name'] as String? ?? 'Farmer',
+      fullName: map['full_name'] as String? ?? 'AIRA User',
       email: map['email'] as String? ?? '',
       autoIrrigationEnabled: map['auto_irrigation_enabled'] as bool? ?? true,
       notificationsEnabled: map['notifications_enabled'] as bool? ?? true,

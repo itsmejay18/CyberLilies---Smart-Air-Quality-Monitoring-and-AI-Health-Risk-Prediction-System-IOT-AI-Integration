@@ -51,14 +51,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: 40),
                 Text(
-                  'Smart Farm',
+                  'AIRA',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Monitor crop health, forecast plant stress, and control irrigation from anywhere.',
+                  'Monitor air quality, review AI health risk forecasts, and receive personalized respiratory guidance from anywhere.',
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 32),
@@ -131,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Without Supabase credentials the app uses a local demo session so you can explore the full workflow.',
+                  'Without Supabase credentials the app uses a local demo session so you can explore the AIRA workflow.',
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),

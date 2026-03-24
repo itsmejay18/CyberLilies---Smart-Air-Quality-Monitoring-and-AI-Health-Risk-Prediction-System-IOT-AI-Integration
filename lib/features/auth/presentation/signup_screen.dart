@@ -13,8 +13,8 @@ class SignupScreen extends ConsumerStatefulWidget {
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController(text: 'Demo Farmer');
-  final _emailController = TextEditingController(text: 'farmer@demo.com');
+  final _fullNameController = TextEditingController(text: 'AIRA Demo User');
+  final _emailController = TextEditingController(text: 'user@aira.demo');
   final _passwordController = TextEditingController(text: 'password123');
 
   @override

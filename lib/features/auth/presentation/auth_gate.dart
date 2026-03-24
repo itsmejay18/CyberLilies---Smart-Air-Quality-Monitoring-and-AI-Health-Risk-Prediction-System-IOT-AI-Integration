@@ -15,7 +15,7 @@ class AuthGate extends ConsumerWidget {
 
     return AsyncValueWidget(
       value: authState,
-      loadingMessage: 'Restoring your farm session...',
+      loadingMessage: 'Restoring your AIRA session...',
       data: (user) {
         if (user == null) {
           return const LoginScreen();

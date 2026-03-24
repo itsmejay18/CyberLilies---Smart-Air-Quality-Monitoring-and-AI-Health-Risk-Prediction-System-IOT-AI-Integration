@@ -41,7 +41,7 @@ class SmartFarmApp extends ConsumerWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Smart Farm',
+      title: AppConstants.appTitle,
       theme: AppTheme.lightTheme,
       routerConfig: router,
     );

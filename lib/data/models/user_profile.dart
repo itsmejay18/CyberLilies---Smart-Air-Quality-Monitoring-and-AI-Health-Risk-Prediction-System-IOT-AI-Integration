@@ -15,7 +15,7 @@ class UserProfile extends Equatable {
     return UserProfile(
       id: map['id'] as String,
       email: map['email'] as String? ?? '',
-      fullName: map['full_name'] as String? ?? 'Farmer',
+      fullName: map['full_name'] as String? ?? 'AIRA User',
     );
   }
 

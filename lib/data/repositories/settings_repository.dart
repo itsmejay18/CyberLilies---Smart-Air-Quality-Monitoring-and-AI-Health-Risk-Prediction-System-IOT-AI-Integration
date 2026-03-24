@@ -48,7 +48,7 @@ class SettingsRepository {
 
     return AppSettings(
       userId: userId,
-      fullName: 'Farmer',
+      fullName: 'AIRA User',
       email: email,
       autoIrrigationEnabled: true,
       notificationsEnabled: true,

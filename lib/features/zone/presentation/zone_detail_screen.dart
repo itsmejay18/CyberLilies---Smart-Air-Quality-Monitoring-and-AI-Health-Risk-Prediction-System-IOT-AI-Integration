@@ -40,10 +40,10 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
     final device = ref.watch(zoneIoTDeviceProvider(widget.zoneId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Zone Details')),
+      appBar: AppBar(title: const Text('Area Details')),
       body: AsyncValueWidget(
         value: details,
-        loadingMessage: 'Loading zone telemetry...',
+        loadingMessage: 'Loading environmental readings...',
         data: (zoneDetails) {
           final prediction = zoneDetails.prediction;
           final latest = zoneDetails.latestSensorData;
@@ -51,7 +51,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
             prediction?.stressLevel ?? zoneDetails.zone.predictedStress,
           );
           final translator = prediction == null
-              ? 'No AI prediction yet. Connect an ESP32 node and send sensor readings to generate plant insights.'
+              ? 'No AI health assessment yet. Connect a sensor node and send readings to generate personalized insights.'
               : plantTranslatorMessage(
                   zone: zoneDetails.zone,
                   prediction: prediction,
@@ -77,14 +77,14 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                         children: [
                           _StatusBadge(
                             label:
-                                'Current ${zoneDetails.zone.currentStress.name}',
+                                'Current ${zoneDetails.zone.currentStress.name} risk',
                             color: StatusColorHelper.forLevel(
                               zoneDetails.zone.currentStress,
                             ),
                           ),
                           _StatusBadge(
                             label:
-                                'Predicted ${zoneDetails.zone.predictedStress.name}',
+                                'Predicted ${zoneDetails.zone.predictedStress.name} risk',
                             color: statusColor,
                           ),
                         ],
@@ -109,7 +109,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                 children: [
                   SensorMetricTile(
                     icon: Icons.water_drop_outlined,
-                    label: 'Soil Moisture',
+                    label: 'Air Quality',
                     value: latest == null
                         ? '--'
                         : '${latest.soilMoisture.toStringAsFixed(1)}%',
@@ -130,7 +130,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   ),
                   SensorMetricTile(
                     icon: Icons.psychology_outlined,
-                    label: 'Stress Probability',
+                    label: 'Health Risk',
                     value: prediction == null
                         ? '--'
                         : '${(prediction.stressProbability * 100).toStringAsFixed(0)}%',
@@ -145,24 +145,24 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Forecast',
+                        'AI Advisory',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         prediction?.summary ??
-                            'No forecast is available yet for this zone.',
+                            'No advisory is available yet for this area.',
                       ),
                       const SizedBox(height: 8),
                       Text(
                         prediction == null
-                            ? 'Waiting for telemetry'
+                            ? 'Waiting for live readings'
                             : 'Next ${prediction.forecastHours} hours',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Last action: ${zoneDetails.lastAction?.actionType ?? 'No recent action'}',
+                        'Last system action: ${zoneDetails.lastAction?.actionType ?? 'No recent action'}',
                       ),
                     ],
                   ),
@@ -173,9 +173,9 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                 data: (value) => value == null
                     ? const EmptyStateCard(
                         icon: Icons.memory_outlined,
-                        title: 'No node assigned',
+                        title: 'No sensor assigned',
                         message:
-                            'Assign an ESP32 device to this zone to monitor connectivity, battery, and actuator health.',
+                            'Assign a sensor node to this area to monitor connectivity, battery, and device health.',
                       )
                     : IoTDeviceCard(device: value),
                 loading: () => const Card(
@@ -225,7 +225,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                           status: 'completed',
                           createdAt: DateTime.now(),
                           notes:
-                              'Irrigation sent directly from the app to the ESP32 device.',
+                              'Device output sent directly from the app to the ESP32 sensor.',
                         );
                         ref.invalidate(iotDevicesProvider);
                         ref.invalidate(localZonesProvider);
@@ -240,7 +240,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                       content: Text(
                         action.status == 'failed'
                             ? action.notes
-                            : 'Irrigation ${action.status}: ${action.notes}',
+                            : 'Device action ${action.status}: ${action.notes}',
                       ),
                     ),
                   );
@@ -248,7 +248,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                   ref.invalidate(zoneDetailsProvider(widget.zoneId));
                 },
                 icon: const Icon(Icons.power),
-                label: const Text('Start Manual Irrigation'),
+                label: const Text('Trigger Device Action'),
               ),
               const SizedBox(height: 16),
               Card(
@@ -261,7 +261,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Sensor History',
+                            'Reading History',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           TimeRangeSelector(
@@ -280,7 +280,7 @@ class _ZoneDetailScreenState extends ConsumerState<ZoneDetailScreen> {
                               icon: Icons.timeline,
                               title: 'No history yet',
                               message:
-                                  'Sensor history will appear here after telemetry records start arriving.',
+                                  'Reading history will appear here after live sensor records start arriving.',
                             );
                           }
 

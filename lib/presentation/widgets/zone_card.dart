@@ -42,7 +42,7 @@ class ZoneCard extends StatelessWidget {
                 runSpacing: 12,
                 children: [
                   _MetricChip(
-                    label: 'Soil',
+                    label: 'Air Quality',
                     value: '${zone.soilMoisture.toStringAsFixed(0)}%',
                   ),
                   _MetricChip(
@@ -59,12 +59,12 @@ class ZoneCard extends StatelessWidget {
               Row(
                 children: [
                   _StatusPill(
-                    label: 'Current ${zone.currentStress.name}',
+                    label: 'Current ${zone.currentStress.name} risk',
                     color: currentColor,
                   ),
                   const SizedBox(width: 8),
                   _StatusPill(
-                    label: 'AI ${zone.predictedStress.name}',
+                    label: 'AI ${zone.predictedStress.name} risk',
                     color: predictedColor,
                   ),
                 ],

@@ -48,10 +48,11 @@ Prediction predictionFromTelemetry(DeviceTelemetry telemetry) {
   final level = estimateStressLevel(telemetry);
   final summary = switch (level) {
     StressLevel.critical =>
-      'High drought stress risk detected from direct ESP32 telemetry.',
+      'High respiratory risk detected from direct ESP32 sensor readings.',
     StressLevel.warning =>
-      'Warning signs detected from local device telemetry.',
-    StressLevel.healthy => 'Local telemetry indicates stable plant conditions.',
+      'Warning signs detected from local environmental readings.',
+    StressLevel.healthy =>
+      'Local readings indicate stable environmental conditions.',
   };
 
   return Prediction(
@@ -88,7 +89,7 @@ List<FarmAlert> alertsFromTelemetry(
         FarmAlert(
           id: 'local-offline-${device.id}',
           zoneId: device.zoneId,
-          title: 'Device Offline',
+          title: 'Sensor Offline',
           message: '${device.name} is offline or unreachable.',
           type: 'device',
           isRead: false,
@@ -107,8 +108,8 @@ List<FarmAlert> alertsFromTelemetry(
           id: 'local-stress-${device.id}-${telemetry.recordedAt.millisecondsSinceEpoch}',
           zoneId: device.zoneId,
           title: prediction.stressLevel == StressLevel.critical
-              ? 'Critical Stress Risk'
-              : 'Stress Warning',
+              ? 'High Health Risk'
+              : 'Health Risk Warning',
           message: prediction.summary,
           type: 'prediction',
           isRead: false,

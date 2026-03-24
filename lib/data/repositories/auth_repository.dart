@@ -62,7 +62,7 @@ class AuthRepository {
         email: email,
         password: password,
       );
-      await _syncSupabaseProfile(response.user, fallbackFullName: 'Farmer');
+      await _syncSupabaseProfile(response.user, fallbackFullName: 'AIRA User');
       return;
     }
 
@@ -103,7 +103,7 @@ class AuthRepository {
     return UserProfile(
       id: AppConstants.mockUserId,
       email: email,
-      fullName: 'Farmer',
+      fullName: 'AIRA User',
     );
   }
 
@@ -111,7 +111,7 @@ class AuthRepository {
     return UserProfile(
       id: user.id,
       email: user.email ?? '',
-      fullName: user.userMetadata?['full_name'] as String? ?? 'Farmer',
+      fullName: user.userMetadata?['full_name'] as String? ?? 'AIRA User',
     );
   }
 

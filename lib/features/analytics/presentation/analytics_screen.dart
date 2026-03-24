@@ -32,7 +32,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 icon: Icons.insights_outlined,
                 title: 'No analytics yet',
                 message:
-                    'Add farm zones and sensor records in Supabase to unlock live analytics here.',
+                    'Add monitoring areas and environmental records in Supabase to unlock live analytics here.',
               ),
             ],
           );
@@ -60,14 +60,14 @@ class AnalyticsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Crop climate trends',
+                    'Environmental trends',
                     style: Theme.of(
                       context,
                     ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Track soil moisture, temperature, and humidity patterns over time.',
+                    'Track air quality, temperature, and humidity patterns over time.',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -84,7 +84,7 @@ class AnalyticsScreen extends ConsumerWidget {
               children: [
                 DropdownMenu<String>(
                   initialSelection: zoneId,
-                  label: const Text('Zone'),
+                  label: const Text('Area'),
                   onSelected: (value) {
                     ref
                         .read(analyticsSelectedZoneIdProvider.notifier)
@@ -122,7 +122,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 if (orderedPoints.isEmpty) {
                   return const EmptyStateCard(
                     icon: Icons.show_chart,
-                    title: 'No history for this zone',
+                    title: 'No history for this area',
                     message:
                         'Once sensors start sending values, trend charts will appear here.',
                   );
@@ -135,7 +135,7 @@ class AnalyticsScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: _MetricSummaryCard(
-                            label: 'Soil Moisture',
+                            label: 'Air Quality',
                             value: '${latest.soilMoisture.toStringAsFixed(1)}%',
                             color: const Color(0xFF2F7D32),
                           ),
@@ -243,7 +243,7 @@ class _ChartLegend extends StatelessWidget {
       spacing: 12,
       runSpacing: 12,
       children: const [
-        _LegendChip(label: 'Soil Moisture', color: Color(0xFF2F7D32)),
+        _LegendChip(label: 'Air Quality', color: Color(0xFF2F7D32)),
         _LegendChip(label: 'Temperature', color: Color(0xFFE65100)),
         _LegendChip(label: 'Humidity', color: Color(0xFF0277BD)),
       ],

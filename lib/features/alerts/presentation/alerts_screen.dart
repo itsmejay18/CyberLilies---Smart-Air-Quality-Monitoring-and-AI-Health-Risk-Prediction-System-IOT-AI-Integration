@@ -16,7 +16,7 @@ class AlertsScreen extends ConsumerWidget {
 
     return AsyncValueWidget(
       value: alerts,
-      loadingMessage: 'Checking farm alerts...',
+      loadingMessage: 'Checking live alerts...',
       data: (items) {
         if (items.isEmpty) {
           return ListView(
@@ -26,7 +26,7 @@ class AlertsScreen extends ConsumerWidget {
                 icon: Icons.notifications_none,
                 title: 'No alerts right now',
                 message:
-                    'When drought predictions, anomalies, or irrigation actions occur, they will appear here.',
+                    'When air quality advisories, anomalies, or health risk warnings occur, they will appear here.',
               ),
             ],
           );

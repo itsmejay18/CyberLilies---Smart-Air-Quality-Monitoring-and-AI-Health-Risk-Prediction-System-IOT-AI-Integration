@@ -54,7 +54,10 @@ class FarmRepository {
   Future<ZoneDetails> fetchZoneDetails(String zoneId) async {
     final zones = await fetchZones();
     final zone = zones.firstWhere((item) => item.id == zoneId);
-    final history = await fetchSensorHistory(zoneId, AnalyticsRange.last24Hours);
+    final history = await fetchSensorHistory(
+      zoneId,
+      AnalyticsRange.last24Hours,
+    );
     final prediction = await fetchPrediction(zoneId);
     final action = await fetchLastAction(zoneId);
 
@@ -152,7 +155,10 @@ class FarmRepository {
 
     try {
       for (final alert in alerts.where((item) => !item.isRead)) {
-        await client.from('alerts').update({'is_read': true}).eq('id', alert.id);
+        await client
+            .from('alerts')
+            .update({'is_read': true})
+            .eq('id', alert.id);
       }
     } catch (_) {}
   }
@@ -179,8 +185,7 @@ class FarmRepository {
         actionType: 'manual_irrigation',
         status: 'failed',
         createdAt: DateTime.now(),
-        notes:
-            'Irrigation command was not sent because the backend is unavailable.',
+        notes: 'Device action was not sent because the backend is unavailable.',
       );
     }
   }
@@ -266,7 +271,10 @@ class FarmRepository {
   }
 
   Future<Zone> _enrichZone(Zone zone) async {
-    final history = await fetchSensorHistory(zone.id, AnalyticsRange.last24Hours);
+    final history = await fetchSensorHistory(
+      zone.id,
+      AnalyticsRange.last24Hours,
+    );
     final prediction = await fetchPrediction(zone.id);
     final latest = history.isNotEmpty ? history.first : null;
 
