@@ -2,6 +2,27 @@
 
 Production-ready Flutter frontend for a smart farming platform with Supabase auth/data, FastAPI AI predictions, realtime alerts, manual irrigation control, and farm analytics.
 
+## Screenshots
+
+<p align="center">
+  <img src="ScreenShots/Screenshot%20%28188%29.png" alt="App screenshot 1" width="260" />
+  <img src="ScreenShots/Screenshot%20%28190%29.png" alt="App screenshot 2" width="260" />
+</p>
+
+<p align="center">
+  <img src="ScreenShots/Screenshot%20%28191%29.png" alt="App screenshot 3" width="260" />
+  <img src="ScreenShots/Screenshot%20%28192%29.png" alt="App screenshot 4" width="260" />
+</p>
+
+<p align="center">
+  <img src="ScreenShots/Screenshot%20%28193%29.png" alt="App screenshot 5" width="260" />
+  <img src="ScreenShots/Screenshot%20%28194%29.png" alt="App screenshot 6" width="260" />
+</p>
+
+<p align="center">
+  <img src="ScreenShots/Screenshot%20%28195%29.png" alt="App screenshot 7" width="260" />
+</p>
+
 ## Setup
 
 1. Install Flutter stable.
