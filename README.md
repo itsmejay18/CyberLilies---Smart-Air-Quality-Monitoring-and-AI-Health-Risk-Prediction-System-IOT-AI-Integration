@@ -5,7 +5,7 @@ AIRA is an IoT and AI-driven platform designed to monitor air quality in real ti
 ## Project Information
 
 - Project: AIRA (AI for Respiratory Awareness): An IoT-Based Smart Air Quality Monitoring and Personalized Health Advisory System
-- Proponents: Radz Vincent L. Minoza, Jay J. Ababon, Maria Azelea Jorillo, Arian Mae G. Estrera, and Hannah Tagalog D. Melendres
+- Proponents: Radz Vincent L. Minoza, Jay J. Ababon, Maria Azelea Jorillo, Arian Mae G. Estrera, and Hannah Joy D. Melendres
 - Faculty Adviser: Prof. Lilian Guia B. Burgos
 - Institution: Davao del Sur State College
 - Track: Public Health & Telemedicine
