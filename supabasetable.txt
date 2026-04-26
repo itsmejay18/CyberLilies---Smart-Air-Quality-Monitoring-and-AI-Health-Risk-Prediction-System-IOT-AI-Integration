@@ -1,84 +1,704 @@
-SUPABASE TABLE DESIGN FOR SMART FARM APP
+-- =====================================================
+-- AI-Powered Plant Stress Prediction and Self-Healing Smart Farm System
+-- Full Supabase PostgreSQL Schema
+-- =====================================================
 
-1. users
-- id uuid primary key references auth.users(id) on delete cascade
-- email text not null
-- full_name text default 'Farmer'
-- auto_irrigation_enabled boolean default true
-- notifications_enabled boolean default true
-- created_at timestamptz default now()
-- updated_at timestamptz default now()
+-- Recommended extensions
+create extension if not exists pgcrypto;
+create extension if not exists "uuid-ossp";
 
-2. zones
-- id text primary key
-- name text not null
-- soil_moisture numeric default 0
-- temperature numeric default 0
-- humidity numeric default 0
-- current_stress text check healthy|warning|critical
-- predicted_stress text check healthy|warning|critical
-- auto_irrigation_enabled boolean default true
-- created_at timestamptz default now()
-- updated_at timestamptz default now()
+-- =====================================================
+-- 1. PROFILES
+-- Linked to Supabase auth.users
+-- =====================================================
+create table if not exists public.profiles (
+    id uuid primary key references auth.users(id) on delete cascade,
+    full_name text,
+    email text unique,
+    role text default 'farmer' check (role in ('farmer', 'admin', 'technician')),
+    phone text,
+    avatar_url text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
 
-3. sensor_data
-- id text primary key
-- zone_id text references zones(id) on delete cascade
-- soil_moisture numeric not null
-- temperature numeric not null
-- humidity numeric not null
-- recorded_at timestamptz default now()
+-- =====================================================
+-- 2. FARMS
+-- Optional grouping if one user manages multiple farms
+-- =====================================================
+create table if not exists public.farms (
+    id uuid primary key default gen_random_uuid(),
+    owner_id uuid not null references public.profiles(id) on delete cascade,
+    name text not null,
+    location_name text,
+    latitude double precision,
+    longitude double precision,
+    description text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
 
-4. predictions
-- id uuid primary key default gen_random_uuid()
-- zone_id text references zones(id) on delete cascade
-- stress_probability numeric not null
-- stress_level text check healthy|warning|critical
-- forecast_hours integer default 4
-- summary text
-- created_at timestamptz default now()
+-- =====================================================
+-- 3. ZONES
+-- Zone-based monitoring, not per-plant
+-- =====================================================
+create table if not exists public.zones (
+    id uuid primary key default gen_random_uuid(),
+    farm_id uuid not null references public.farms(id) on delete cascade,
+    name text not null,
+    crop_type text,
+    growth_stage text,
+    area_size numeric(10,2),
+    area_unit text default 'sqm',
+    sensor_node_id text unique,
+    auto_irrigation_enabled boolean default true,
+    target_soil_moisture_min numeric(5,2),
+    target_soil_moisture_max numeric(5,2),
+    notes text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now(),
+    constraint zones_area_unit_check check (area_unit in ('sqm', 'hectare', 'acre'))
+);
 
-5. alerts
-- id text primary key
-- zone_id text references zones(id) on delete cascade
-- title text not null
-- message text not null
-- type text not null
-- is_read boolean default false
-- created_at timestamptz default now()
+-- =====================================================
+-- 4. SENSOR DATA
+-- Raw and processed data from IoT devices
+-- =====================================================
+create table if not exists public.sensor_data (
+    id bigint generated always as identity primary key,
+    zone_id uuid not null references public.zones(id) on delete cascade,
+    recorded_at timestamptz not null default now(),
 
-6. actions
-- id text primary key
-- zone_id text references zones(id) on delete cascade
-- action_type text not null
-- status text not null
-- notes text
-- created_at timestamptz default now()
+    soil_moisture numeric(6,2),
+    temperature_c numeric(6,2),
+    humidity numeric(6,2),
+    gas_level numeric(8,2),
+    light_level numeric(8,2),
+    rainfall numeric(8,2),
 
-7. iot_devices
-- id text primary key
-- zone_id text references zones(id) on delete cascade
-- name text not null
-- connection_state text check online|warning|offline
-- last_seen timestamptz default now()
-- battery_level integer default 100
-- signal_strength integer default 100
-- firmware_version text default '1.0.0'
-- pump_online boolean default true
-- pending_sync boolean default false
-- created_at timestamptz default now()
-- updated_at timestamptz default now()
+    device_status text default 'online' check (device_status in ('online', 'offline', 'warning')),
+    battery_level numeric(5,2),
 
-EXPECTED APP QUERIES
-- auth profile settings from users by authenticated auth.users.id
-- dashboard reads zones
-- history reads sensor_data by zone_id and recorded_at
-- ai fallback reads predictions by zone_id latest created_at
-- alerts feed reads alerts latest first
-- manual irrigation logs actions
-- device monitoring reads iot_devices by zone_id and last_seen
+    raw_payload jsonb,
+    created_at timestamptz default now()
+);
 
-SQL FILES
-- supabase/schema.sql
-- supabase/seed.sql
-- docs/iot_payload.md
+-- =====================================================
+-- 5. PREDICTIONS
+-- AI output for current/future stress prediction
+-- =====================================================
+create table if not exists public.predictions (
+    id bigint generated always as identity primary key,
+    zone_id uuid not null references public.zones(id) on delete cascade,
+    sensor_data_id bigint references public.sensor_data(id) on delete set null,
+
+    prediction_time timestamptz not null default now(),
+    forecast_for timestamptz,
+
+    stress_status text not null check (
+        stress_status in (
+            'healthy',
+            'mild_stress',
+            'drought_stress',
+            'disease_risk',
+            'environmental_stress',
+            'critical'
+        )
+    ),
+
+    stress_probability numeric(5,2) check (stress_probability >= 0 and stress_probability <= 100),
+    confidence_score numeric(5,2) check (confidence_score >= 0 and confidence_score <= 100),
+
+    predicted_soil_moisture numeric(6,2),
+    predicted_temperature_c numeric(6,2),
+    predicted_humidity numeric(6,2),
+
+    anomaly_detected boolean default false,
+    anomaly_score numeric(8,4),
+
+    top_factors jsonb, -- e.g. ["low_soil_moisture","high_temperature"]
+    model_name text,
+    model_version text,
+    translator_message text,
+
+    created_at timestamptz default now()
+);
+
+-- =====================================================
+-- 6. ALERTS
+-- User/system notifications
+-- =====================================================
+create table if not exists public.alerts (
+    id uuid primary key default gen_random_uuid(),
+    zone_id uuid references public.zones(id) on delete cascade,
+    prediction_id bigint references public.predictions(id) on delete set null,
+
+    alert_type text not null check (
+        alert_type in (
+            'drought_predicted',
+            'anomaly_detected',
+            'irrigation_triggered',
+            'device_offline',
+            'critical_stress',
+            'manual_notice'
+        )
+    ),
+
+    severity text not null default 'medium' check (
+        severity in ('low', 'medium', 'high', 'critical')
+    ),
+
+    title text not null,
+    message text not null,
+
+    is_read boolean default false,
+    sent_to_user_id uuid references public.profiles(id) on delete set null,
+
+    created_at timestamptz default now()
+);
+
+-- =====================================================
+-- 7. ACTIONS
+-- Manual or automated system actions
+-- =====================================================
+create table if not exists public.actions (
+    id uuid primary key default gen_random_uuid(),
+    zone_id uuid not null references public.zones(id) on delete cascade,
+    prediction_id bigint references public.predictions(id) on delete set null,
+    triggered_by_user_id uuid references public.profiles(id) on delete set null,
+
+    action_type text not null check (
+        action_type in (
+            'irrigation_on',
+            'irrigation_off',
+            'nutrient_dispense',
+            'alert_only',
+            'manual_override'
+        )
+    ),
+
+    trigger_source text not null default 'system' check (
+        trigger_source in ('system', 'user', 'scheduler')
+    ),
+
+    status text not null default 'pending' check (
+        status in ('pending', 'completed', 'failed', 'cancelled')
+    ),
+
+    reason text,
+    metadata jsonb,
+
+    executed_at timestamptz,
+    created_at timestamptz default now()
+);
+
+-- =====================================================
+-- 8. USER SETTINGS
+-- Per-user preferences
+-- =====================================================
+create table if not exists public.user_settings (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null unique references public.profiles(id) on delete cascade,
+
+    notifications_enabled boolean default true,
+    auto_irrigation_global boolean default true,
+    preferred_language text default 'en',
+    theme text default 'system' check (theme in ('light', 'dark', 'system')),
+
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+-- =====================================================
+-- 9. OPTIONAL DEVICE REGISTRY
+-- If you want to track IoT hardware explicitly
+-- =====================================================
+create table if not exists public.devices (
+    id uuid primary key default gen_random_uuid(),
+    zone_id uuid references public.zones(id) on delete set null,
+    device_id text not null unique,
+    device_name text,
+    firmware_version text,
+    status text default 'active' check (status in ('active', 'inactive', 'maintenance')),
+    last_seen_at timestamptz,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+-- =====================================================
+-- FUNCTIONS: updated_at trigger
+-- =====================================================
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+-- =====================================================
+-- TRIGGERS
+-- =====================================================
+drop trigger if exists trg_profiles_updated_at on public.profiles;
+create trigger trg_profiles_updated_at
+before update on public.profiles
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists trg_farms_updated_at on public.farms;
+create trigger trg_farms_updated_at
+before update on public.farms
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists trg_zones_updated_at on public.zones;
+create trigger trg_zones_updated_at
+before update on public.zones
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists trg_user_settings_updated_at on public.user_settings;
+create trigger trg_user_settings_updated_at
+before update on public.user_settings
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists trg_devices_updated_at on public.devices;
+create trigger trg_devices_updated_at
+before update on public.devices
+for each row
+execute function public.set_updated_at();
+
+-- =====================================================
+-- AUTO-CREATE PROFILE ON SIGNUP
+-- =====================================================
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, full_name)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', '')
+  )
+  on conflict (id) do nothing;
+
+  insert into public.user_settings (user_id)
+  values (new.id)
+  on conflict (user_id) do nothing;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row
+execute function public.handle_new_user();
+
+-- =====================================================
+-- INDEXES
+-- =====================================================
+create index if not exists idx_farms_owner_id on public.farms(owner_id);
+
+create index if not exists idx_zones_farm_id on public.zones(farm_id);
+create index if not exists idx_zones_sensor_node_id on public.zones(sensor_node_id);
+
+create index if not exists idx_sensor_data_zone_id on public.sensor_data(zone_id);
+create index if not exists idx_sensor_data_recorded_at on public.sensor_data(recorded_at desc);
+create index if not exists idx_sensor_data_zone_recorded_at on public.sensor_data(zone_id, recorded_at desc);
+
+create index if not exists idx_predictions_zone_id on public.predictions(zone_id);
+create index if not exists idx_predictions_prediction_time on public.predictions(prediction_time desc);
+create index if not exists idx_predictions_forecast_for on public.predictions(forecast_for desc);
+
+create index if not exists idx_alerts_zone_id on public.alerts(zone_id);
+create index if not exists idx_alerts_sent_to_user_id on public.alerts(sent_to_user_id);
+create index if not exists idx_alerts_is_read on public.alerts(is_read);
+create index if not exists idx_alerts_created_at on public.alerts(created_at desc);
+
+create index if not exists idx_actions_zone_id on public.actions(zone_id);
+create index if not exists idx_actions_triggered_by_user_id on public.actions(triggered_by_user_id);
+create index if not exists idx_actions_created_at on public.actions(created_at desc);
+
+create index if not exists idx_devices_zone_id on public.devices(zone_id);
+create index if not exists idx_devices_device_id on public.devices(device_id);
+
+-- =====================================================
+-- ENABLE RLS
+-- =====================================================
+alter table public.profiles enable row level security;
+alter table public.farms enable row level security;
+alter table public.zones enable row level security;
+alter table public.sensor_data enable row level security;
+alter table public.predictions enable row level security;
+alter table public.alerts enable row level security;
+alter table public.actions enable row level security;
+alter table public.user_settings enable row level security;
+alter table public.devices enable row level security;
+
+-- =====================================================
+-- RLS POLICIES
+-- Basic owner-based access
+-- =====================================================
+
+-- PROFILES
+drop policy if exists "Users can view own profile" on public.profiles;
+create policy "Users can view own profile"
+on public.profiles
+for select
+using (auth.uid() = id);
+
+drop policy if exists "Users can update own profile" on public.profiles;
+create policy "Users can update own profile"
+on public.profiles
+for update
+using (auth.uid() = id);
+
+-- FARMS
+drop policy if exists "Users can view own farms" on public.farms;
+create policy "Users can view own farms"
+on public.farms
+for select
+using (owner_id = auth.uid());
+
+drop policy if exists "Users can insert own farms" on public.farms;
+create policy "Users can insert own farms"
+on public.farms
+for insert
+with check (owner_id = auth.uid());
+
+drop policy if exists "Users can update own farms" on public.farms;
+create policy "Users can update own farms"
+on public.farms
+for update
+using (owner_id = auth.uid());
+
+drop policy if exists "Users can delete own farms" on public.farms;
+create policy "Users can delete own farms"
+on public.farms
+for delete
+using (owner_id = auth.uid());
+
+-- ZONES
+drop policy if exists "Users can view zones of own farms" on public.zones;
+create policy "Users can view zones of own farms"
+on public.zones
+for select
+using (
+    exists (
+        select 1
+        from public.farms f
+        where f.id = zones.farm_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can insert zones of own farms" on public.zones;
+create policy "Users can insert zones of own farms"
+on public.zones
+for insert
+with check (
+    exists (
+        select 1
+        from public.farms f
+        where f.id = zones.farm_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can update zones of own farms" on public.zones;
+create policy "Users can update zones of own farms"
+on public.zones
+for update
+using (
+    exists (
+        select 1
+        from public.farms f
+        where f.id = zones.farm_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can delete zones of own farms" on public.zones;
+create policy "Users can delete zones of own farms"
+on public.zones
+for delete
+using (
+    exists (
+        select 1
+        from public.farms f
+        where f.id = zones.farm_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+-- SENSOR DATA
+drop policy if exists "Users can view sensor data of own farms" on public.sensor_data;
+create policy "Users can view sensor data of own farms"
+on public.sensor_data
+for select
+using (
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = sensor_data.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can insert sensor data of own farms" on public.sensor_data;
+create policy "Users can insert sensor data of own farms"
+on public.sensor_data
+for insert
+with check (
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = sensor_data.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+-- PREDICTIONS
+drop policy if exists "Users can view predictions of own farms" on public.predictions;
+create policy "Users can view predictions of own farms"
+on public.predictions
+for select
+using (
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = predictions.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can insert predictions of own farms" on public.predictions;
+create policy "Users can insert predictions of own farms"
+on public.predictions
+for insert
+with check (
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = predictions.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+-- ALERTS
+drop policy if exists "Users can view alerts of own farms" on public.alerts;
+create policy "Users can view alerts of own farms"
+on public.alerts
+for select
+using (
+    (
+        sent_to_user_id = auth.uid()
+    )
+    or
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = alerts.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can update own alerts" on public.alerts;
+create policy "Users can update own alerts"
+on public.alerts
+for update
+using (
+    sent_to_user_id = auth.uid()
+    or exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = alerts.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can insert alerts for own farms" on public.alerts;
+create policy "Users can insert alerts for own farms"
+on public.alerts
+for insert
+with check (
+    sent_to_user_id = auth.uid()
+    or exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = alerts.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+-- ACTIONS
+drop policy if exists "Users can view actions of own farms" on public.actions;
+create policy "Users can view actions of own farms"
+on public.actions
+for select
+using (
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = actions.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can insert actions of own farms" on public.actions;
+create policy "Users can insert actions of own farms"
+on public.actions
+for insert
+with check (
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = actions.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can update actions of own farms" on public.actions;
+create policy "Users can update actions of own farms"
+on public.actions
+for update
+using (
+    exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = actions.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+-- USER SETTINGS
+drop policy if exists "Users can view own settings" on public.user_settings;
+create policy "Users can view own settings"
+on public.user_settings
+for select
+using (user_id = auth.uid());
+
+drop policy if exists "Users can update own settings" on public.user_settings;
+create policy "Users can update own settings"
+on public.user_settings
+for update
+using (user_id = auth.uid());
+
+drop policy if exists "Users can insert own settings" on public.user_settings;
+create policy "Users can insert own settings"
+on public.user_settings
+for insert
+with check (user_id = auth.uid());
+
+-- DEVICES
+drop policy if exists "Users can view devices of own farms" on public.devices;
+create policy "Users can view devices of own farms"
+on public.devices
+for select
+using (
+    zone_id is null
+    or exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = devices.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+drop policy if exists "Users can manage devices of own farms" on public.devices;
+create policy "Users can manage devices of own farms"
+on public.devices
+for all
+using (
+    zone_id is null
+    or exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = devices.zone_id
+          and f.owner_id = auth.uid()
+    )
+)
+with check (
+    zone_id is null
+    or exists (
+        select 1
+        from public.zones z
+        join public.farms f on f.id = z.farm_id
+        where z.id = devices.zone_id
+          and f.owner_id = auth.uid()
+    )
+);
+
+-- =====================================================
+-- OPTIONAL VIEW: latest sensor reading per zone
+-- =====================================================
+create or replace view public.latest_zone_sensor_data as
+select distinct on (zone_id)
+    id,
+    zone_id,
+    recorded_at,
+    soil_moisture,
+    temperature_c,
+    humidity,
+    gas_level,
+    light_level,
+    rainfall,
+    device_status,
+    battery_level,
+    raw_payload,
+    created_at
+from public.sensor_data
+order by zone_id, recorded_at desc;
+
+-- =====================================================
+-- OPTIONAL VIEW: latest prediction per zone
+-- =====================================================
+create or replace view public.latest_zone_predictions as
+select distinct on (zone_id)
+    id,
+    zone_id,
+    sensor_data_id,
+    prediction_time,
+    forecast_for,
+    stress_status,
+    stress_probability,
+    confidence_score,
+    predicted_soil_moisture,
+    predicted_temperature_c,
+    predicted_humidity,
+    anomaly_detected,
+    anomaly_score,
+    top_factors,
+    model_name,
+    model_version,
+    translator_message,
+    created_at
+from public.predictions
+order by zone_id, prediction_time desc;
+
+-- =====================================================
+-- SAMPLE SEED DATA (optional, run after signing in with a user)
+-- Replace owner_id manually if needed
+-- =====================================================
+-- Example inserts are omitted here to avoid auth conflicts during setup.
